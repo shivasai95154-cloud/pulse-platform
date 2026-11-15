@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+
   pull_request:
     branches:
       - main
@@ -18,30 +19,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Download repository code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: Verify project folders
       - name: Check project structure
         run: |
+          echo "Checking Pulse Platform directories..."
+
           test -d infra
           test -d services/web
           test -d services/arcade
           test -d services/tasks
           test -d services/api
-          echo "Project structure validated!"
 
+          echo "All required directories exist!"
+
+      # Step 3: Install Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.9.8"
+          terraform_version: "1.10.5"
 
-      - name: Check Terraform formatting
+      # Step 4: Display Terraform version
+      - name: Check Terraform version
+        run: terraform version
+
+      # Step 5: Check Terraform formatting
+      - name: Terraform format check
         run: terraform fmt -check -recursive infra
 
-      - name: Initialize Terraform
+      # Step 6: Initialize Terraform without remote backend
+      - name: Terraform initialization
         working-directory: infra
         run: terraform init -backend=false
 
-      - name: Validate Terraform configuration
+      # Step 7: Validate Terraform configuration
+      - name: Terraform validation
         working-directory: infra
         run: terraform validate
+
+      # Step 8: Display success message
+      - name: CI success
+        run: echo "Pulse Platform CI validation completed successfully!"
