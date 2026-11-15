@@ -52,7 +52,11 @@ resource "aws_instance" "app" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
 
-  subnet_id = data.aws_subnets.default.ids[0]
+  # Distribute EC2 instances across available subnets
+  subnet_id = element(
+    sort(data.aws_subnets.default.ids),
+    index(keys(local.services), each.key) % length(data.aws_subnets.default.ids)
+  )
 
   associate_public_ip_address = true
 
