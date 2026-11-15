@@ -1,0 +1,70 @@
+
+name: Pulse Platform Deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pulse-platform-terraform
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy infrastructure to AWS
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Download repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Install Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+
+      # 3. Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      # 4. Verify AWS identity
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      # 5. Initialize Terraform with S3 backend
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      # 6. Check Terraform formatting
+      - name: Terraform Format
+        run: terraform fmt -check -recursive infra
+
+      # 7. Validate Terraform
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
+
+      # 8. Generate deployment plan
+      - name: Terraform Plan
+        working-directory: infra
+        run: terraform plan -out=pulse.tfplan
+
+      # 9. Deploy AWS infrastructure
+      - name: Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve pulse.tfplan
+
+      # 10. Display deployment outputs
+      - name: Terraform Outputs
+        working-directory: infra
+        run: terraform output
