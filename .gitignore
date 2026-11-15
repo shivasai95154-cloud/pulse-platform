@@ -1,3 +1,36 @@
+
+# Terraform working directory
 .terraform/
-*.tfstate*
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform plan files
+*.tfplan
+*.plan
+
+# Terraform crash logs
+crash.log
+crash.*.log
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Environment and secret files
+.env
+.env.*
+!.env.example
+
+# Python generated files
 __pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Operating system files
+.DS_Store
+Thumbs.db
