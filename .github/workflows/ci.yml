@@ -9,20 +9,39 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   validate:
-    name: Validate project structure
+    name: Validate project and Terraform
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check project directories
+      - name: Check project structure
         run: |
           test -d infra
           test -d services/web
           test -d services/arcade
           test -d services/tasks
           test -d services/api
-          echo "Pulse Platform structure validated!"
+          echo "Project structure validated!"
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infra
+
+      - name: Initialize Terraform
+        working-directory: infra
+        run: terraform init -backend=false
+
+      - name: Validate Terraform configuration
+        working-directory: infra
+        run: terraform validate
